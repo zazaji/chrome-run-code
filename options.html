@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Options</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                padding: 0;
+                background-color: #f4f4f9;
+            }
+            h1 {
+                font-size: 18px;
+            }
+            label {
+                display: block;
+                margin-bottom: 10px;
+                font-weight: bold;
+            }
+            input[type="text"] {
+                width: 100%;
+                padding: 8px;
+                margin-bottom: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+            button {
+                padding: 10px 15px;
+                background-color: #4caf50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #45a049;
+            }
+            .message {
+                margin-top: 10px;
+                color: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Configure</h1>
+        <form id="options-form">
+            <label for="serverAddress">Server Address:</label>
+            <input
+                type="text"
+                id="serverAddress"
+                placeholder="http://localhost:8000/run-python"
+            /><label for="token">Token:</label>
+            <input type="text" id="token" placeholder="xxxxxxxxxxxxxxxx" />
+            <button type="button" id="save">Save</button>
+            <div class="message" id="status"></div>
+        </form>
+
+        <script src="options.js"></script>
+    </body>
+</html>

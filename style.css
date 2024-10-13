@@ -1,0 +1,45 @@
+.custom-render-button,
+.run-save-button {
+    background-color: rgba(128, 128, 128, 0.8); /* 半透明灰色背景 */
+    color: #fff; /* 白色文本 */
+    border: none; /* 移除边框 */
+    padding: 4px 3px; /* 调整按钮的内边距 */
+    text-align: center; /* 居中对齐文本 */
+    text-decoration: none; /* 移除下划线 */
+    display: inline-block; /* 保持按钮的内联块布局 */
+    font-size: 12px; /* 字体大小 */
+    cursor: pointer; /* 鼠标悬停显示为指针 */
+    border-radius: 3px; /* 圆角边框 */
+    z-index: 10; /* 确保按钮位于内容上方 */
+}
+
+.button-container {
+    display: flex; /* 将按钮容器设置为 flex 布局 */
+    gap: 8px; /* 为按钮之间添加间距 */
+    position: absolute;
+    bottom: 10px; /* 距离 <pre> 底部10px */
+    right: 10px; /* 距离 <pre> 右侧10px */
+    z-index: 10;
+}
+
+.custom-render-button:hover,
+.run-save-button:hover {
+    background-color: rgba(128, 128, 128, 0.6); /* 鼠标悬停时的半透明灰色背景 */
+}
+
+.custom-render-button:active,
+.run-save-button:active {
+    background-color: rgba(128, 128, 128, 0.9); /* 鼠标按下时稍微深一点的灰色 */
+}
+
+/* Custom styles for the div that displays the Python code output */
+.custom-result-div,
+.custom-render-div {
+    background-color: #f9f9f9; /* Light background for output or rendered HTML */
+    padding: 10px; /* Padding inside the div */
+    border: 1px solid #ccc; /* Border around the div */
+    margin-top: 10px; /* Space between code block and result */
+    border-radius: 4px; /* Slightly rounded corners */
+    font-family: monospace; /* Use a monospace font */
+    white-space: pre-wrap; /* Preserve whitespace and wrapping */
+}

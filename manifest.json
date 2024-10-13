@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Code Renderer",
+  "version": "1.0",
+  "permissions": ["storage", "activeTab", "scripting", "tabs", "contextMenus"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["content.js"],
+      "css": ["style.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options.html",
+
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
