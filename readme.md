@@ -1,4 +1,4 @@
-# Overview
+# Overview [中文](readme_CN.md)
 
 A Chrome extension that allows for the direct execution and editing of code within the browser. Additionally, it offers the functionality to save code and edit it before running.
 
@@ -13,6 +13,10 @@ A Chrome extension that allows for the direct execution and editing of code with
 - **Multi-language Support**: Detect and support multiple programming languages, including Python, JavaScript, HTML, Bash, and PHP. You can customize your own backend to implement this.
 
 - **Dynamic DOM Updates**: Automatically add functionality to dynamically inserted code blocks.
+
+## List of Supported Websites
+
+- Supports Gemini、Chatgpt、Github、Baidu、yiyan、Qwen、Phind、Kimi、chatglm.
 
 ## Installation Steps
 
