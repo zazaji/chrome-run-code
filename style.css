@@ -35,9 +35,9 @@
 /* Custom styles for the div that displays the Python code output */
 .custom-result-div,
 .custom-render-div {
-    background-color: #f9f9f9; /* Light background for output or rendered HTML */
+    background-color: rgba(128, 128, 128, 0.2); /* 半透明灰色背景 */
     padding: 10px; /* Padding inside the div */
-    border: 1px solid #ccc; /* Border around the div */
+    border: 1px solid rgba(128, 128, 128, 0.1); /* Border around the div */
     margin-top: 10px; /* Space between code block and result */
     border-radius: 4px; /* Slightly rounded corners */
     font-family: monospace; /* Use a monospace font */
