@@ -12,6 +12,10 @@ chrome插件，可以在浏览器中直接执行和编辑代码。此外，还�
 - **多语言支持**：检测并支持多种编程语言，包括 Python、JavaScript、HTML、Bash 和 PHP，你可以定制自己的后端来实现。
 - **动态 DOM 更新**：自动为动态插入的代码块添加功能。
 
+## 支持的网站列表
+
+- Gemini、Chatgpt、Github、Baidu、yiyan、Qwen、Phind、Kimi、chatglm. 还有更多的没有一一测试。
+
 ## 安装步骤
 
 1. 克隆此仓库：
