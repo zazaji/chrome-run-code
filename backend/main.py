@@ -10,6 +10,7 @@ from io import BytesIO
 from typing import List, Union
 save_path='./'
 ALLOWED_TOKEN = "your-token-here"
+TIMEOUT_DURATION = 120  # 设置运行子进程超时时间，单位为秒
 
 app = FastAPI()
 languages={"python":"py","css":"css","javascript":"js","html":"html","markdown":"md","json":"json","yaml":"yml","text":"txt","bash":"sh","powershell":"ps1","sql":"sql","c":"c","cpp":"cpp","java":"java","kotlin":"kt","objective-c":"m","swift":"swift","typescript":"ts"}
@@ -96,25 +97,25 @@ async def run_code(code_request: CodeRequest):
             if code_request.language in ["html","htm",'text','txt']:
                 return {"outputs": [{"type": "text", "data": code_request.code.replace("<pre","<div").replace("</pre>","</div")}]}
             elif code_request.language in ["python","py"]:
-                result = subprocess.run(['python3', source_filename], capture_output=True, text=True, cwd=save_path)
+                result = subprocess.run(['python3', source_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
             elif code_request.language in ["sh","bash"]:
-                result = subprocess.run(['sh', source_filename], capture_output=True, text=True, cwd=save_path)
+                result = subprocess.run(['sh', source_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
             elif code_request.language in ["javascript","js"]:
-                result = subprocess.run(['node', source_filename], capture_output=True, text=True, cwd=save_path)
+                result = subprocess.run(['node', source_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
             elif code_request.language == "php":
-                result = subprocess.run(['php', source_filename], capture_output=True, text=True, cwd=save_path)
+                result = subprocess.run(['php', source_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
             elif code_request.language == "c":
                 # 使用 gcc 编译 C 代码
-                compile_result = subprocess.run(['gcc', source_filename, '-o', exec_filename], capture_output=True, text=True, cwd=save_path)
+                compile_result = subprocess.run(['gcc', source_filename, '-o', exec_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
                 if compile_result.returncode == 0:
-                    result = subprocess.run([exec_filename], capture_output=True, text=True, cwd=save_path)
+                    result = subprocess.run([exec_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
                 else:
                     return {"outputs": [{"type": "error", "data": compile_result.stderr}]}
             elif code_request.language == "cpp":
                 # 使用 g++ 编译 C++ 代码
-                compile_result = subprocess.run(['g++', source_filename, '-o', exec_filename], capture_output=True, text=True, cwd=save_path)
+                compile_result = subprocess.run(['g++', source_filename, '-o', exec_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
                 if compile_result.returncode == 0:
-                    result = subprocess.run([exec_filename], capture_output=True, text=True, cwd=save_path)
+                    result = subprocess.run([exec_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
                 else:
                     return {"outputs": [{"type": "error", "data": compile_result.stderr}]}
             else:
