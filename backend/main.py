@@ -9,6 +9,8 @@ import base64
 from io import BytesIO
 from typing import List, Union
 save_path='./'
+ALLOWED_TOKEN = "your-token-here"
+
 app = FastAPI()
 languages={"python":"py","css":"css","javascript":"js","html":"html","markdown":"md","json":"json","yaml":"yml","text":"txt","bash":"sh","powershell":"ps1","sql":"sql","c":"c","cpp":"cpp","java":"java","kotlin":"kt","objective-c":"m","swift":"swift","typescript":"ts"}
 
@@ -23,7 +25,6 @@ app.add_middleware(
 )
 
 # 保存路径和支持语言的映射
-save_path = "../run_code/"  # 修改为你的保存路径
 languages = {
     "python": "py",
     "py": "py",
@@ -46,8 +47,11 @@ class Output(BaseModel):
     data: Union[str, List[str]]  # 可以是字符串或字符串列表
 
 
-ALLOWED_TOKEN = "your-token-here"
 
+def remove_non_printable_chars(text: str) -> str:
+    # 替换不可见字符，但保留回车、汉字、空格等
+    rtext = re.sub(r'[^\x20-\x7E\x0A\x0D\u4e00-\u9fff]', '', text)
+    return rtext
 
 @app.post("/runcode")  # 添加 token 依赖
 async def run_code(code_request: CodeRequest):
@@ -59,19 +63,20 @@ async def run_code(code_request: CodeRequest):
 
     try:
         # 提取第一行作为文件名
-        first_line = code_request.code.splitlines()[0].strip()
+        first_line = code_request.code.splitlines()[0].split(' ')[-1].strip()
         filename = re.sub(r'[^A-Za-z0-9_.-]+', '_', first_line)[-20:]
-        file_extension = languages.get(code_request.language.lower(), 'py')  # 根据语言选择文件扩展名
+        file_extension = languages.get(code_request.language.lower(), 'py')
+        if filename.endswith(file_extension):
+            filename = filename[:-len(file_extension)]
         source_filename = f"{save_path}{filename}.{file_extension}"
         exec_filename = f"{save_path}{filename}.out"
-
         save_code = code_request.code
 
         if code_request.language == "python" and "matplotlib.pyplot" in code_request.code:
             # 针对 Python 和 Matplotlib 的特殊处理
             code_with_saves = re.sub(
                 r'plt.show\(\)',
-                lambda match: f'plt.savefig("temp_{images_count}.png"); plt.clf(); print("[[[temp_{images_count}.png]]]")',
+                lambda match: 'plt.savefig(f"temp_{images_count}.png"); plt.clf(); print(f"[[[temp_{images_count}.png]]]");images_count+=1',
                 code_request.code
             )
             save_code = "images_count = 0\noutputs = []\n" + code_with_saves
@@ -79,13 +84,13 @@ async def run_code(code_request: CodeRequest):
         if code_request.run == False:
             # 如果 run=False，只保存代码文件不执行
             with open(source_filename, 'w') as f:
-                f.write(code_request.code)
+                f.write(remove_non_printable_chars(code_request.code))
             return {"outputs": [{"type": "text", "data": f"{source_filename} saved successfully."}]}
 
         else:
             # 保存代码文件并执行
             with open(source_filename, 'w') as f:
-                f.write(save_code)
+                f.write(remove_non_printable_chars(save_code))
 
             # 根据语言选择执行命令
             if code_request.language in ["html","htm",'text','txt']:
