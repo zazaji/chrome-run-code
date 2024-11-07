@@ -51,21 +51,46 @@ function detectCodeLanguage(preElement) {
 
   const parentDiv = preElement.closest("div");
   if (parentDiv) {
+    console.log(parentDiv);
     const langDiv = parentDiv.querySelector(
-      ".code-lang, .language, .top .language",
+      ".code-lang, .language, .top .language ",
     );
+    if (langDiv && langDiv.textContent.trim()) {
+      console.log(langDiv.textContent.trim().toLowerCase());
+      return langDiv.textContent.trim().toLowerCase();
+    }
+  }
+  // console.log("123456");
+  const parentParentDiv = parentDiv ? parentDiv.parentElement : null;
+
+  if (parentParentDiv) {
+    console.log(parentParentDiv);
+    const langDiv = parentParentDiv.querySelector(
+      "span.tongyi-design-highlighter-lang",
+    );
+
     if (langDiv && langDiv.textContent.trim()) {
       return langDiv.textContent.trim().toLowerCase();
     }
   }
-
   const codeText = codeElement ? codeElement.textContent : "";
-  if (codeText.includes("def ") || codeText.includes("import ")) {
+
+  // 取前10行
+  const lines = codeText.split("\n").slice(0, 10).join("\n");
+
+  // 正则表达式匹配
+  const isPython = /\bdef\b|\bimport\b/.test(lines);
+  const isHTML = /<html|<body|<iframe/.test(lines);
+
+  if (isPython) {
     return "python";
+  } else if (isHTML) {
+    return "html";
   }
   return null;
 }
 
+// Function to create and display the modal window for code editing
 // Function to create and display the modal window for code editing
 function createEditModal(codeContent, saveCallback) {
   // Create the modal elements
@@ -94,16 +119,21 @@ function createEditModal(codeContent, saveCallback) {
   // Create a textarea to edit the code
   const textArea = document.createElement("textarea");
   textArea.value = codeContent;
-
   textArea.style.width = "100%";
   textArea.style.height = "400px";
   textArea.style.fontSize = "16px";
   textArea.style.backgroundColor = "#808080";
-
   textArea.style.color = "#fff";
-
   textArea.style.fontFamily = "monospace";
+
+  // Append textarea to modal content
   modalContent.appendChild(textArea);
+
+  // Set focus to the textarea to activate virtual keyboard on mobile
+  textArea.focus();
+
+  // Also listen to touch events to ensure mobile compatibility
+  textArea.addEventListener("touchstart", () => textArea.focus());
 
   // Button container
   const buttonContainer = document.createElement("div");
@@ -120,8 +150,7 @@ function createEditModal(codeContent, saveCallback) {
   acceptButton.style.border = "none";
   acceptButton.style.borderRadius = "4px";
   acceptButton.addEventListener("click", () => {
-    let updatedCode = textArea.value;
-
+    const updatedCode = textArea.value;
     saveCallback(updatedCode);
     document.body.removeChild(modal); // Close the modal
   });
@@ -140,9 +169,12 @@ function createEditModal(codeContent, saveCallback) {
   });
   buttonContainer.appendChild(cancelButton);
 
+  // Append button container to modal content
   modalContent.appendChild(buttonContainer);
+
+  // Append modal content to modal and add modal to the body
   modal.appendChild(modalContent);
-  document.body.appendChild(modal); // Add the modal to the body
+  document.body.appendChild(modal);
 }
 
 // Function to add the Run, Save, and Edit buttons to code blocks
@@ -155,10 +187,12 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
     containerDiv = codeElement.closest("div");
   } else {
     containerDiv = codeElement.closest("pre");
+    console.log(containerDiv);
     if (!containerDiv || containerDiv.querySelector(".custom-render-button")) {
       return;
     }
     language = detectCodeLanguage(containerDiv);
+    console.log(language);
   }
 
   const buttonContainer = document.createElement("div");
@@ -171,6 +205,35 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
     "space-x-2",
     "items-center",
   );
+  if (
+    ["css", "csv", "txt", "md", "yaml", "json", "ini", "xml"].includes(language)
+  ) {
+    const saveButton = document.createElement("div");
+    saveButton.innerHTML = "☌ Save";
+    saveButton.classList.add("custom-render-button", "run-save-button");
+
+    const editButton = document.createElement("div");
+    editButton.innerHTML = "✎ Edit";
+    editButton.classList.add("custom-render-button", "edit-button");
+
+    buttonContainer.appendChild(saveButton);
+    buttonContainer.appendChild(editButton);
+
+    containerDiv.style.position = "relative";
+    containerDiv.appendChild(buttonContainer);
+
+    saveButton.addEventListener("click", () => {
+      const codeContent = extractCodeContent(codeElement);
+      sendCodeToServer(codeContent, 0, containerDiv, language);
+    });
+
+    editButton.addEventListener("click", () => {
+      const codeContent = extractCodeContent(codeElement);
+      createEditModal(codeContent, (updatedCode) => {
+        codeElement.textContent = updatedCode;
+      });
+    });
+  }
 
   if (
     [
@@ -225,8 +288,9 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
 
 // Function to send code content to the server
 function sendCodeToServer(codeContent, runParam, containerDiv, language) {
-  chrome.storage.sync.get(["serverAddress", "token"], (data) => {
+  chrome.storage.sync.get(["serverAddress", "token", "isLocal"], (data) => {
     const serverAddress = data.serverAddress || "http://localhost:8000/runcode";
+    const isLocal = data.isLocal || false;
     const token = data.token || "";
     let resultDiv = containerDiv.querySelector(".custom-result-div");
     if (resultDiv) {
@@ -253,6 +317,7 @@ function sendCodeToServer(codeContent, runParam, containerDiv, language) {
         code: codeContent,
         run: runParam,
         language: language,
+        isLocal: isLocal,
       }),
     })
       .then((response) => response.json())
@@ -269,6 +334,12 @@ function sendCodeToServer(codeContent, runParam, containerDiv, language) {
             } else if (output.type === "text") {
               const textOutput = document.createElement("div");
               textOutput.innerHTML = output.data;
+              if (language === "html") {
+                textOutput.innerHTML = textOutput.innerHTML.replace(
+                  "/static/../run_code/",
+                  `${serverAddress}/../static/`,
+                );
+              }
               resultDiv.appendChild(textOutput);
             } else if (output.type === "html") {
               const htmlOutput = document.createElement("div");
@@ -293,6 +364,7 @@ function sendCodeToServer(codeContent, runParam, containerDiv, language) {
 
 function extractLanguageAndCode() {
   const codeElements = document.querySelectorAll("pre code");
+  console.log(codeElements);
 
   codeElements.forEach((codeElement) => {
     divcode = codeElement.querySelector("div.code-wrapper");

@@ -26,6 +26,13 @@
                 border: 1px solid #ccc;
                 border-radius: 4px;
             }
+            select {
+                width: 100%;
+                padding: 8px;
+                margin-bottom: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
             button {
                 padding: 10px 15px;
                 background-color: #4caf50;
@@ -51,8 +58,15 @@
                 type="text"
                 id="serverAddress"
                 placeholder="http://localhost:8000/run-python"
-            /><label for="token">Token:</label>
+            />
+
+            <label for="token">Token:</label>
             <input type="text" id="token" placeholder="xxxxxxxxxxxxxxxx" />
+            <label for="isLocal">Local Run:</label>
+            <select id="isLocal">
+                <option value="true">True</option>
+                <option value="false">False</option>
+            </select>
             <button type="button" id="save">Save</button>
             <div class="message" id="status"></div>
         </form>
