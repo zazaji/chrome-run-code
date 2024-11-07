@@ -11,7 +11,7 @@ import base64
 import time
 from io import BytesIO
 from typing import List, Union
-ALLOWED_TOKEN = "Wh0arey0u"
+ALLOWED_TOKEN = "YourTokenHere"
 TIMEOUT_DURATION = 120  # 设置运行子进程超时时间，单位为秒
 
 app = FastAPI()
