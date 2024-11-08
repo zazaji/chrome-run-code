@@ -11,6 +11,8 @@ import base64
 import time
 from io import BytesIO
 from typing import List, Union
+import platform
+
 ALLOWED_TOKEN = "YourTokenHere"
 TIMEOUT_DURATION = 120  # 设置运行子进程超时时间，单位为秒
 
@@ -48,7 +50,19 @@ class Output(BaseModel):
     type: str
     data: Union[str, List[str]]  # 可以是字符串或字符串列表
 
-
+def get_run_command(source_filename):
+    if platform.system() == 'Windows':
+        # 在 Windows 上使用 cmd.exe 或 powershell.exe 执行脚本
+        if source_filename.endswith('.sh'):
+            # 使用 powershell 执行 .sh 脚本
+            run_command = ['powershell.exe', '-ExecutionPolicy', 'Bypass', '-File', source_filename]
+        else:
+            # 使用 cmd.exe 执行其他类型的脚本
+            run_command = ['cmd.exe', '/c', source_filename]
+    else:
+        # 在 Unix-like 系统上使用 sh 执行脚本
+        run_command = ['sh', source_filename]
+    return run_command
 
 def remove_non_printable_chars(text: str) -> str:
     # 替换不可见字符，但保留回车、汉字、空格等
@@ -130,13 +144,12 @@ async def run_code(code_request: CodeRequest):
 
                 result = subprocess.run(['python3', source_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
             elif file_extension in ["sh","bash"]:
-                print('file_extension')
-                print(file_extension)
+
                 if "rm -" in code_request.code:
                     result_dict= {"returncode":0,"stdout":"Dangerous command detected.","stderr":"ERROR."}
                     result=SimpleNamespace(**result_dict)
                 else:
-                    result = subprocess.run(['sh', source_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
+                    result = subprocess.run(get_run_command(source_filename), capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
             elif file_extension in ["javascript","js"]:
                 result = subprocess.run(['node', source_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
             elif file_extension == "php":
