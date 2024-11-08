@@ -1,0 +1,2 @@
+ALLOWED_TOKEN = "your_token_here" #你的TOKEN
+TIMEOUT_DURATION = 120  # 设置运行子进程超时时间，单位为秒
