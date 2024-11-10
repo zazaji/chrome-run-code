@@ -28,7 +28,7 @@ A Chrome extension that allows for the direct execution and editing of code with
 
    ```
 
-2. Navigate to the backend directory and start the Python FastAPI service（sh run.sh）. For safety,suggest to be run in Docker.
+2. Navigate to the backend directory and install the required dependencies by running `pip install -r requirements.txt`. Then, run `sh run.sh` (Linux/Mac) or `run.cmd` (Windows) to run the server. Please consider the security implications.
 
 3. Open Chrome and navigate to `chrome://extensions/`.
 
@@ -77,4 +77,4 @@ print("hello world")
 
 ## License
 
-This project is licensed under the MIT License.
+MIT License.
