@@ -36,9 +36,16 @@ A Chrome extension that allows for the direct execution and editing of code with
 
 5. Click on "Load unpacked" and select the directory where the extension is located.
 
+6. If you need GPT to write code that can be saved to the corresponding file name, you should add comments and file names at the first line of the code, or you can have GPT implement it according to instructions. The format can refer to:
+
+```
+# src/test.py
+print("hello world")
+```
+
 ## Usage Instructions
 
-1. Navigate to a webpage that contains code snippets (such as documentation or tutorials).
+1. Open the GPT webpage (such as ERNIE , Qwen, chatgpt, etc.) and ask GPT to write a piece of code.
 
 2. The extension will automatically add "run", "save", and "edit" buttons next to the code blocks.
 
