@@ -12,21 +12,18 @@ import time
 from io import BytesIO
 from typing import List, Union
 import platform
-from config import ALLOWED_TOKEN,TIMEOUT_DURATION
+from  hashlib import md5
+from config import *
 
 app = FastAPI()
 
 
+if not(os.path.exists(SAVE_PATH)):
+    os.mkdir(SAVE_PATH)
+if not(os.path.exists(SAVE_PATH+TEMP_FOLDER)):
+    os.mkdir(SAVE_PATH+TEMP_FOLDER)
 
-save_path = "../run_code/"  # 修改为你的保存路径
-# temp_folder是在save_path下一级的路径
-temp_folder='temp/'
-if not(os.path.exists(save_path)):
-    os.mkdir(save_path)
-if not(os.path.exists(save_path+temp_folder)):
-    os.mkdir(save_path+temp_folder)
-
-app.mount("/static", StaticFiles(directory=save_path), name="static")
+app.mount("/static", StaticFiles(directory=SAVE_PATH), name="static")
 
 
 languages={"python":"py","css":"css","javascript":"js","html":"html","markdown":"md","json":"json","yaml":"yml","text":"txt","bash":"sh","sh":"sh","powershell":"ps1","sql":"sql","c":"c","cpp":"cpp","java":"java","kotlin":"kt","objective-c":"m","swift":"swift","typescript":"ts"}
@@ -94,23 +91,23 @@ def get_filename_from_code(save_code,file_extension):
     first_line = save_code.splitlines()[0]
 
     if first_line.startswith("import "):
-        filename=temp_folder+str(int(time.time()))
+        filename = TEMP_FOLDER + md5(save_code.encode('utf-8')).hexdigest()[:8]
     else:
         filename = re.sub(r'[^A-Za-z0-9_\\\-\/\.]+', '', first_line.split(' ')[-1].strip())[-100:]
     if filename.endswith(file_extension):
         filename = filename[:-len(file_extension)-1]
 
     if filename.split("/")[-1] in error_pyfilenames:
-        filename=temp_folder+str(int(time.time()))
-    print(first_line,filename)
+        filename=TEMP_FOLDER+md5(save_code.encode('utf-8')).hexdigest()[:8]
+    # print(first_line,filename)
     return filename
 
-def replace_show_plot(save_code):
+def replace_show_plot(code):
     # 针对 Python 和 Matplotlib 的特殊处理
     code_with_saves = re.sub(
         r'plt.show\(\)',
         lambda match: 'plt.savefig(f"temp_{images_count}.png"); plt.clf(); print(f"[[[temp_{images_count}.png]]]");',
-        code_request.code
+        code
     )
     save_code= "images_count = 0\noutputs = []\n" + code_with_saves
     # save_code =add_global_images_count(code_request.code)
@@ -123,7 +120,7 @@ def replace_base64_images(outputs):
         if isinstance(output.data, str):
             if "[[[" in output.data:
                 # 如果是图片，将其转换为 Base64 编码并添加到 outputs
-                img_filename = save_path + output.data.replace("[[[", "").replace("]]]", "")
+                img_filename = SAVE_PATH + output.data.replace("[[[", "").replace("]]]", "")
                 if os.path.exists(img_filename):
                     # 将图像转换为 Base64 编码
                     with open(img_filename, "rb") as img_file:
@@ -132,6 +129,106 @@ def replace_base64_images(outputs):
                         output = Output(type="image", data=image_output)
         new_outputs.append(output)
     return new_outputs
+
+@app.post("/runcode")  # 添加 token 依赖
+async def run_code(code_request: CodeRequest):
+    if code_request.token != ALLOWED_TOKEN:
+        return {"outputs": [{"type": "error", "data": "Invalid token"}]}
+
+    global SAVE_PATH
+    global TEMP_FOLDER
+    outputs: List[Output] = []
+    images_count = 0  # 计数生成的图像数量
+    # print(code_request.isLocal)
+
+    if 1:
+    # try:
+        # 提取第一行作为文件名
+        file_extension = languages.get(code_request.language.lower(), 'py')
+        save_code = code_request.code
+        # print(file_extension)
+        filename=get_filename_from_code(save_code,file_extension)
+
+        source_filename = f"{SAVE_PATH}{filename}.{file_extension}"
+        exec_filename = f"{SAVE_PATH}{filename}.out"
+
+        if code_request.isLocal==False and code_request.language == "python" and "matplotlib.pyplot" in save_code:
+            save_code=replace_show_plot(save_code)
+            # print(save_code)
+
+        if code_request.run == False:
+            # 如果 run=False，只保存代码文件不执行
+            save_file_with_directory(source_filename, remove_non_printable_chars(code_request.code))
+
+            return {"outputs": [{"type": "text", "data": f"{source_filename} saved successfully."}]}
+
+        else:
+            # 保存代码文件并执行
+            save_file_with_directory(source_filename, remove_non_printable_chars(save_code))
+
+            # 根据语言选择执行命令
+            if file_extension in ["html","htm",'text','txt']:
+                print(code_request.isLocal)
+                if  code_request.isLocal:
+                    return {"outputs": [{"type": "text", "data":f"<a href='/static/{source_filename}' target='_blank'>Click to view</a>"}]}
+                else:
+                    return {"outputs": [{"type": "text", "data": code_request.code.replace("<pre","<div").replace("</pre>","</div")}]}
+            elif file_extension in ["python","py"]:
+                result = subprocess.run(['python3', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+            elif file_extension in ["sh","bash"]:
+                if "rm -" in code_request.code:
+                    result= {"returncode":0,"stdout":"Dangerous command detected.","stderr":"Dangerous command detected."}
+                    result=SimpleNamespace(**result)
+                else:
+                    result = subprocess.run(get_run_command(source_filename), capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+            elif file_extension in ["ts","js"]:
+                result = subprocess.run(['node', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+            elif file_extension == "php":
+                result = subprocess.run(['php', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+            elif file_extension == "c":
+                # 使用 gcc 编译 C 代码
+                compile_result = subprocess.run(['gcc', source_filename, '-o', exec_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+                if compile_result.returncode == 0:
+                    result = subprocess.run([exec_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+                else:
+                    return {"outputs": [{"type": "error", "data": compile_result.stderr}]}
+            elif file_extension == "cpp":
+                # 使用 g++ 编译 C++ 代码
+                compile_result = subprocess.run(['g++', source_filename, '-o', exec_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+                if compile_result.returncode == 0:
+                    result = subprocess.run([exec_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+                else:
+                    return {"outputs": [{"type": "error", "data": compile_result.stderr}]}
+            else:
+                return {"outputs": [{"type": "error", "data": "Unsupported language."}]}
+
+            if result.returncode == 0:
+                # 解析标准输出并添加到 outputs
+                stdout_lines = result.stdout.strip().splitlines()
+                for line in stdout_lines:
+                    outputs.append(Output(type="text", data=line))
+                new_outputs=replace_base64_images(outputs)
+                print(new_outputs)
+
+                return {"outputs": [output.dict() for output in new_outputs]}
+            else:
+                # 如果执行失败，可以返回错误信息
+                return {"outputs": [{"type": "error", "data": result.stderr}]}
+
+    # except Exception as e:
+    #     return {"outputs": [{"type": "error", "data": str(e)}]}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+
+
+
+
+
 
 # def add_global_images_count(code):
 #     # 匹配包含 plt.show() 的函数
@@ -161,94 +258,3 @@ def replace_base64_images(outputs):
 
 #     save_code = "images_count = 0\noutputs = []\n" + code_with_saves
 #     return save_code
-
-@app.post("/runcode")  # 添加 token 依赖
-async def run_code(code_request: CodeRequest):
-    if code_request.token != ALLOWED_TOKEN:
-        return {"outputs": [{"type": "error", "data": "Invalid token"}]}
-
-    global save_path
-    global temp_folder
-
-    outputs: List[Output] = []
-    images_count = 0  # 计数生成的图像数量
-    print(code_request.isLocal)
-
-    if 1:
-    # try:
-        # 提取第一行作为文件名
-        file_extension = languages.get(code_request.language.lower(), 'py')
-        save_code = code_request.code
-        print(file_extension)
-        filename=get_filename_from_code(save_code,file_extension)
-
-        source_filename = f"{save_path}{filename}.{file_extension}"
-        exec_filename = f"{save_path}{filename}.out"
-
-        if code_request.isLocal==False and code_request.language == "python" and "matplotlib.pyplot" in save_code:
-            save_code=replace_show_plot(save_code)
-
-        if code_request.run == False:
-            # 如果 run=False，只保存代码文件不执行、
-            save_file_with_directory(source_filename, remove_non_printable_chars(code_request.code))
-
-            return {"outputs": [{"type": "text", "data": f"{source_filename} saved successfully."}]}
-
-        else:
-            # 保存代码文件并执行
-            save_file_with_directory(source_filename, remove_non_printable_chars(save_code))
-
-            # 根据语言选择执行命令
-            if file_extension in ["html","htm",'text','txt']:
-                print(code_request.isLocal)
-                if  code_request.isLocal:
-                    return {"outputs": [{"type": "text", "data":f"<a href='/static/{source_filename}' target='_blank'>Click to view</a>"}]}
-                else:
-                    return {"outputs": [{"type": "text", "data": code_request.code.replace("<pre","<div").replace("</pre>","</div")}]}
-            elif file_extension in ["python","py"]:
-                result = subprocess.run(['python3', source_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
-            elif file_extension in ["sh","bash"]:
-                if "rm -" in code_request.code:
-                    result= {"returncode":0,"stdout":"Dangerous command detected.","stderr":"Dangerous command detected."}
-                    result=SimpleNamespace(**result)
-                else:
-                    result = subprocess.run(get_run_command(source_filename), capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
-            elif file_extension in ["javascript","js"]:
-                result = subprocess.run(['node', source_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
-            elif file_extension == "php":
-                result = subprocess.run(['php', source_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
-            elif file_extension == "c":
-                # 使用 gcc 编译 C 代码
-                compile_result = subprocess.run(['gcc', source_filename, '-o', exec_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
-                if compile_result.returncode == 0:
-                    result = subprocess.run([exec_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
-                else:
-                    return {"outputs": [{"type": "error", "data": compile_result.stderr}]}
-            elif file_extension == "cpp":
-                # 使用 g++ 编译 C++ 代码
-                compile_result = subprocess.run(['g++', source_filename, '-o', exec_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
-                if compile_result.returncode == 0:
-                    result = subprocess.run([exec_filename], capture_output=True, text=True,cwd=save_path, timeout=TIMEOUT_DURATION )
-                else:
-                    return {"outputs": [{"type": "error", "data": compile_result.stderr}]}
-            else:
-                return {"outputs": [{"type": "error", "data": "Unsupported language."}]}
-
-            if result.returncode == 0:
-                # 解析标准输出并添加到 outputs
-                stdout_lines = result.stdout.strip().splitlines()
-                for line in stdout_lines:
-                    outputs.append(Output(type="text", data=line))
-                new_outputs=replace_base64_images(outputs)
-
-                return {"outputs": [output.dict() for output in new_outputs]}
-            else:
-                # 如果执行失败，可以返回错误信息
-                return {"outputs": [{"type": "error", "data": result.stderr}]}
-
-    # except Exception as e:
-    #     return {"outputs": [{"type": "error", "data": str(e)}]}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
