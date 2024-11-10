@@ -22,10 +22,11 @@
    ```bash
    git clone https://github.com/zazaji/chrome-run-code.git
    ```
-2. 进入backend目录，通过pip install -r requirements.txt安装运行所需的依赖。然后运行sh run.sh（linux、mac）或者在命令行中运行run.cmd（windows），请自己考虑安全问题。
-3. 打开 Chrome 并导航到 `chrome://extensions/`。
-4. 通过在右上角切换“开发者模式”来启用开发者模式。
-5. 点击“加载已解压的扩展程序”，选择插件所在的目录，也就是下载的chrome-run-code文件夹。
+2. 修改backend目录下的config.py文件，设置TOKEN，SAVE_PATH等参数。
+3. 进入backend目录，通过pip install -r requirements.txt安装运行所需的依赖。然后运行sh run.sh（linux、mac）或者在命令行中运行run.cmd（windows），请自己考虑安全问题。
+4. 打开 Chrome 并导航到 `chrome://extensions/`。
+5. 通过在右上角切换“开发者模式”来启用开发者模式。
+6. 点击“加载已解压的扩展程序”，选择插件所在的目录，也就是下载的chrome-run-code文件夹。
 
 ## 使用方法
 

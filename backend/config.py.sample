@@ -1,4 +1,4 @@
 ALLOWED_TOKEN = "your_token_here" #你的TOKEN
 TIMEOUT_DURATION = 120  # 设置运行子进程超时时间，单位为秒
-SAVE_PATH = "~/chrome-run-code/run_code/"  # 修改为你的保存路径，也是python的运行路径，可以是相对路径（相对运行python的位置），也可以是绝对路径
+SAVE_PATH = "/User/xxx/chrome-run-code/run_code/"  # 修改为你的保存路径，也是python的运行路径，可以是相对路径（相对运行python的位置），也可以是绝对路径
 TEMP_FOLDER='temp/'   # TEMP_FOLDER是在SAVE_PATH下一级的路径，相对路径

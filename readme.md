@@ -28,20 +28,15 @@ A Chrome extension that allows for the direct execution and editing of code with
 
    ```
 
-2. Navigate to the backend directory and install the required dependencies by running `pip install -r requirements.txt`. Then, run `sh run.sh` (Linux/Mac) or `run.cmd` (Windows) to run the server. Please consider the security implications.
+2. modify the `config.py` file in the backend directory to set TOKEN,and SAVE_PATH, etc.
 
-3. Open Chrome and navigate to `chrome://extensions/`.
+3. Navigate to the backend directory and install the required dependencies by running `pip install -r requirements.txt`. Then, run `sh run.sh` (Linux/Mac) or `run.cmd` (Windows) to run the server. Please consider the security implications.
 
-4. Enable Developer Mode by toggling it on in the top right corner.
+4. Open Chrome and navigate to `chrome://extensions/`.
 
-5. Click on "Load unpacked" and select the directory where the extension is located.
+5. Enable Developer Mode by toggling it on in the top right corner.
 
-6. If you need GPT to write code that can be saved to the corresponding file name, you should add comments and file names at the first line of the code, or you can have GPT implement it according to instructions. The format can refer to:
-
-```
-# src/test.py
-print("hello world")
-```
+6. Click on "Load unpacked" and select the directory where the extension is located.
 
 ## Usage Instructions
 
@@ -54,6 +49,13 @@ print("hello world")
 4. Click "save" to send the code to the configured server.
 
 5. Click "edit" to modify the code in a modal popup box, then accept the changes. The modified content is displayed on the page and can be run by clicking "run".
+
+6. If you need GPT to write code that can be saved to the corresponding file name, you should add comments and file names at the first line of the code, or you can have GPT implement it according to instructions. The format can refer to:
+
+```
+# src/test.py
+print("hello world")
+```
 
 ## Screenshots
 
