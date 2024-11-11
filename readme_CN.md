@@ -9,8 +9,8 @@
 - **运行代码**：执行支持语言的代码片段并显示结果。
 - **保存代码**：将代码片段发送到服务器进行存储或进一步处理。
 - **编辑代码**：在浏览器中打开模态框以直接编辑代码片段。
-- **多语言支持**：检测并支持多种编程语言，包括 Python、JavaScript、HTML、Bash等，你可以定制自己的后端来实现。
-- **动态 DOM 更新**：自动为动态插入的代码块添加功能。
+- **支持多种开发语言**：检测并支持多种编程语言，包括 Python、JavaScript、HTML、Bash等，你可以定制自己的后端来实现。
+- **动态更新**：自动为动态插入的代码块添加功能。
 
 ## 支持的网站列表
 
@@ -23,10 +23,12 @@
    git clone https://github.com/zazaji/chrome-run-code.git
    ```
 2. 修改backend目录下的config.py文件，设置TOKEN，SAVE_PATH等参数。
-3. 进入backend目录，通过pip install -r requirements.txt安装运行所需的依赖。然后运行sh run.sh（linux、mac）或者在命令行中运行run.cmd（windows），请自己考虑安全问题。
-4. 打开 Chrome 并导航到 `chrome://extensions/`。
-5. 通过在右上角切换“开发者模式”来启用开发者模式。
-6. 点击“加载已解压的扩展程序”，选择插件所在的目录，也就是下载的chrome-run-code文件夹。
+3. 进入backend目录，通过pip install -r requirements.txt安装运行所需的依赖。
+4. 然后运行sh run.sh（linux、mac）或者在命令行中运行run.cmd（windows），请自己考虑安全问题。
+5. 打开 Chrome 并导航到 `chrome://extensions/`。
+6. 通过在右上角切换“开发者模式”来启用开发者模式。
+7. 点击“加载已解压的扩展程序”，选择插件所在的目录，也就是下载的chrome-run-code文件夹。
+8. 点击扩展，选择option，配置参数，请参照下方的配置选项。
 
 ## 使用方法
 
@@ -59,7 +61,8 @@ print("hello world")
 ## 配置选项
 
 - 服务器地址可以使用 Chrome 的存储 API 进行配置，默认为 `http://localhost:8000/runcode`。需要与后端服务的token一致。
-- 配置服务器进行安全通信的认证令牌。需要与后端服务的token一致。
+- 配置服务器进行安全通信的token。需要与后端服务的token一致，确保安全。
+- islocal 可以选择是否使用本地服务器还是使用公网服务器，默认为 true。
 
 ## 许可证
 

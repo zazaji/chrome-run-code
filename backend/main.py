@@ -20,8 +20,8 @@ app = FastAPI()
 
 if not(os.path.exists(SAVE_PATH)):
     os.mkdir(SAVE_PATH)
-if not(os.path.exists(SAVE_PATH+TEMP_FOLDER)):
-    os.mkdir(SAVE_PATH+TEMP_FOLDER)
+if not(os.path.exists(os.path.join(SAVE_PATH,TEMP_FOLDER))):
+    os.mkdir(os.path.join(SAVE_PATH,TEMP_FOLDER))
 
 app.mount("/static", StaticFiles(directory=SAVE_PATH), name="static")
 
@@ -84,7 +84,7 @@ def save_file_with_directory(path, content):
         os.makedirs(directory, exist_ok=True)
 
     # 在指定的目录下创建文件并写入内容
-    with open(os.path.join(directory, filename), 'w') as file:
+    with open(os.path.join(directory, filename), 'w',encoding='utf-8') as file:
         file.write(content)
 
 def get_filename_from_code(save_code,file_extension):
@@ -120,7 +120,7 @@ def replace_base64_images(outputs):
         if isinstance(output.data, str):
             if "[[[" in output.data:
                 # 如果是图片，将其转换为 Base64 编码并添加到 outputs
-                img_filename = SAVE_PATH + output.data.replace("[[[", "").replace("]]]", "")
+                img_filename = os.path.join(SAVE_PATH, output.data.replace("[[[", "").replace("]]]", ""))
                 if os.path.exists(img_filename):
                     # 将图像转换为 Base64 编码
                     with open(img_filename, "rb") as img_file:
@@ -149,8 +149,8 @@ async def run_code(code_request: CodeRequest):
         # print(file_extension)
         filename=get_filename_from_code(save_code,file_extension)
 
-        source_filename = f"{SAVE_PATH}{filename}.{file_extension}"
-        exec_filename = f"{SAVE_PATH}{filename}.out"
+        source_filename = os.path.join(SAVE_PATH,f"{filename}.{file_extension}")
+        exec_filename = os.path.join(SAVE_PATH,f"{filename}.out")
 
         if code_request.isLocal==False and code_request.language == "python" and "matplotlib.pyplot" in save_code:
             save_code=replace_show_plot(save_code)
@@ -170,6 +170,9 @@ async def run_code(code_request: CodeRequest):
             if file_extension in ["html","htm",'text','txt']:
                 print(code_request.isLocal)
                 if  code_request.isLocal:
+                    print(source_filename)
+                    source_filename=source_filename.replace("../runcode/","").replace(SAVE_PATH,"")
+
                     return {"outputs": [{"type": "text", "data":f"<a href='/static/{source_filename}' target='_blank'>Click to view</a>"}]}
                 else:
                     return {"outputs": [{"type": "text", "data": code_request.code.replace("<pre","<div").replace("</pre>","</div")}]}

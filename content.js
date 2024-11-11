@@ -81,12 +81,19 @@ function detectCodeLanguage(preElement) {
   // 正则表达式匹配
   const isPython = /\bdef\b|\bimport\b/.test(lines);
   const isHTML = /<html|<body|<iframe/.test(lines);
+  const isSh = /\bcd\b|\bgit\b|\bpython\b|\bwget\b|\bmkdir\b|\bls\b/.test(
+    lines,
+  );
 
+  console.log(isPython, isHTML, isSh);
   if (isPython) {
     return "python";
   } else if (isHTML) {
     return "html";
+  } else if (isSh) {
+    return "sh";
   }
+
   return null;
 }
 
@@ -179,6 +186,7 @@ function createEditModal(codeContent, saveCallback) {
 
 // Function to add the Run, Save, and Edit buttons to code blocks
 function addRenderButtonToCode(codeElement, filenameElement = null) {
+  console.log("addRenderButtonToCode", codeElement);
   let language = null;
   let containerDiv = null;
 
@@ -336,7 +344,7 @@ function sendCodeToServer(codeContent, runParam, containerDiv, language) {
               textOutput.innerHTML = output.data;
               if (language === "html") {
                 textOutput.innerHTML = textOutput.innerHTML.replace(
-                  "/static/../run_code/",
+                  "/static/",
                   `${serverAddress}/../static/`,
                 );
               }

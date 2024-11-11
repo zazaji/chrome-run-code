@@ -30,13 +30,17 @@ A Chrome extension that allows for the direct execution and editing of code with
 
 2. modify the `config.py` file in the backend directory to set TOKEN,and SAVE_PATH, etc.
 
-3. Navigate to the backend directory and install the required dependencies by running `pip install -r requirements.txt`. Then, run `sh run.sh` (Linux/Mac) or `run.cmd` (Windows) to run the server. Please consider the security implications.
+3. Navigate to the backend directory and install the required dependencies by running `pip install -r requirements.txt`.
 
-4. Open Chrome and navigate to `chrome://extensions/`.
+4. Then, run `sh run.sh` (Linux/Mac) or `run.cmd` (Windows) to run the server. Please consider the security implications.
 
-5. Enable Developer Mode by toggling it on in the top right corner.
+5. Open Chrome and navigate to `chrome://extensions/`.
 
-6. Click on "Load unpacked" and select the directory where the extension is located.
+6. Enable Developer Mode by toggling it on in the top right corner.
+
+7. Click on "Load unpacked" and select the directory where the extension is located.
+
+8. Click on the extension, select option, configure the parameters, please refer to the configuration options below.
 
 ## Usage Instructions
 
@@ -76,6 +80,8 @@ print("hello world")
 - The server address can be configured using Chrome's storage API, with the default being `http://localhost:8000/runcode`. It needs to be consistent with the backend service's token.
 
 - Configure the authentication token for secure communication with the server. It needs to be consistent with the backend service's token.
+
+- islocal can be used to choose whether to use the local server or the public server, with the default being true.
 
 ## License
 
