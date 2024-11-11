@@ -26,8 +26,9 @@ if not(os.path.exists(os.path.join(SAVE_PATH,TEMP_FOLDER))):
 app.mount("/static", StaticFiles(directory=SAVE_PATH), name="static")
 
 
-languages={"python":"py","css":"css","javascript":"js","html":"html","markdown":"md","json":"json","yaml":"yml","text":"txt","bash":"sh","sh":"sh","powershell":"ps1","sql":"sql","c":"c","cpp":"cpp","java":"java","kotlin":"kt","objective-c":"m","swift":"swift","typescript":"ts"}
-error_pyfilenames=['','pygame','os', 're', 'sys', 'time', 'subprocess', 'platform', 'os', 're', 'time', 'subprocess', 'platform', 'numpy', 'pandas', 'matplotlib', 'PIL', 'cv2', 'torch', 'tensorflow', 'keras', 'sklearn', 'scipy', 'seaborn', 'nltk', 'jieba', 'wordcloud', 'plotly', 'base64', 'io', 'json', 'yaml', 'csv', 'random', 'math', 'datetime', 'shutil', 'glob', 'argparse', 'logging', 'functools', 'itertools', 'collections', 'operator', 'statistics', 'string', 're', 'urllib', 'http', 'socket', 'ssl', 'hashlib']
+languages={"python":"py","css":"css","javascript":"js","html":"html","markdown":"md","json":"json","yaml":"yml","text":"txt","bash":"sh","sh":"sh","bat":"cmd","cmd":"cmd","powershell":"cmd","sql":"sql","c":"c","cpp":"cpp","java":"java","kotlin":"kt","objective-c":"m","swift":"swift","typescript":"ts"}
+error_pyfilenames=['','pygame','os', 're', 'sys', 'time', 'subprocess', 'platform', 'os', 're', 'time', 'subprocess', 'platform', 'numpy', 'pandas', 'matplotlib', 'PIL', 'cv2', 'torch', 'tensorflow', 'keras', 'sklearn', 'scipy', 'seaborn', 'nltk', 'jieba', 'wordcloud', 'plotly', 'base64', 'io',
+        'json', 'yaml', 'csv', 'random', 'math', 'datetime', 'shutil', 'glob', 'argparse', 'logging', 'functools', 'itertools', 'collections', 'operator', 'statistics', 'string', 're', 'urllib', 'http', 'socket', 'ssl', 'hashlib']
 # print(languages.get("html".lower(), 'py'))
 
 # 添加 CORS 中间件
@@ -61,14 +62,11 @@ def remove_non_printable_chars(text: str) -> str:
     return rtext
 
 
-def get_run_command(source_filename):
+def get_file_extension():
     if platform.system() == 'Windows':
-        # 在 Windows 上使用 cmd.exe 或 powershell.exe 执行脚本
-        run_command = ['cmd.exe', '/c', source_filename]
+        return "cmd"
     else:
-        # 在 Unix-like 系统上使用 sh 执行脚本
-        run_command = ['sh', source_filename]
-    return run_command
+        return "sh"
 
 def save_file_with_directory(path, content):
     # 分离出目录和文件名
@@ -140,6 +138,8 @@ async def run_code(code_request: CodeRequest):
     # try:
         # 提取第一行作为文件名
         file_extension = languages.get(code_request.language.lower(), 'py')
+        if file_extension=="sh":
+            file_extension=get_file_extension()
         save_code = code_request.code
         # print(file_extension)
         filename=get_filename_from_code(save_code,file_extension)
@@ -173,12 +173,20 @@ async def run_code(code_request: CodeRequest):
                     return {"outputs": [{"type": "text", "data": code_request.code.replace("<pre","<div").replace("</pre>","</div")}]}
             elif file_extension in ["python","py"]:
                 result = subprocess.run(['python', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
-            elif file_extension in ["sh","bash"]:
+            elif file_extension=="sh":
                 if "rm -" in code_request.code:
                     result= {"returncode":0,"stdout":"Dangerous command detected.","stderr":"Dangerous command detected."}
                     result=SimpleNamespace(**result)
                 else:
-                    result = subprocess.run(get_run_command(source_filename), capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+                    result = subprocess.run(['sh', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+            elif file_extension=="cmd":
+                if "del-" in code_request.code:
+                    result= {"returncode":0,"stdout":"Dangerous command detected.","stderr":"Dangerous command detected."}
+                    result=SimpleNamespace(**result)
+                else:
+                    result = subprocess.run(['call', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+
+
             elif file_extension in ["ts","js"]:
                 result = subprocess.run(['node', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
             elif file_extension == "php":
