@@ -184,7 +184,7 @@ async def run_code(code_request: CodeRequest):
                     result= {"returncode":0,"stdout":"Dangerous command detected.","stderr":"Dangerous command detected."}
                     result=SimpleNamespace(**result)
                 else:
-                    result = subprocess.run(['call', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+                    result = subprocess.run(['cmd','/c', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
 
 
             elif file_extension in ["ts","js"]:
