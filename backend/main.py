@@ -64,12 +64,7 @@ def remove_non_printable_chars(text: str) -> str:
 def get_run_command(source_filename):
     if platform.system() == 'Windows':
         # 在 Windows 上使用 cmd.exe 或 powershell.exe 执行脚本
-        if source_filename.endswith('.sh'):
-            # 使用 powershell 执行 .sh 脚本
-            run_command = ['powershell.exe', '-ExecutionPolicy', 'Bypass', '-File', source_filename]
-        else:
-            # 使用 cmd.exe 执行其他类型的脚本
-            run_command = ['cmd.exe', '/c', source_filename]
+        run_command = ['cmd.exe', '/c', source_filename]
     else:
         # 在 Unix-like 系统上使用 sh 执行脚本
         run_command = ['sh', source_filename]
@@ -177,7 +172,7 @@ async def run_code(code_request: CodeRequest):
                 else:
                     return {"outputs": [{"type": "text", "data": code_request.code.replace("<pre","<div").replace("</pre>","</div")}]}
             elif file_extension in ["python","py"]:
-                result = subprocess.run(['python3', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
+                result = subprocess.run(['python', source_filename], capture_output=True, text=True,cwd=SAVE_PATH, timeout=TIMEOUT_DURATION )
             elif file_extension in ["sh","bash"]:
                 if "rm -" in code_request.code:
                     result= {"returncode":0,"stdout":"Dangerous command detected.","stderr":"Dangerous command detected."}
