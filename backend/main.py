@@ -83,13 +83,16 @@ def save_file_with_directory(path, content):
 def get_filename_from_code(save_code,file_extension):
     first_line = save_code.splitlines()[0]
 
-    if first_line.startswith("import "):
+    if first_line.startswith("import ") or first_line.startswith("from "):
         filename = TEMP_FOLDER + md5(save_code.encode('utf-8')).hexdigest()[:8]
+    elif first_line.startswith("<!DOCTYPE") and file_extension=="html":
+        filename = ""
+    # elif first_line.startswith("/*") and file_extension=="css":
+    #     filename = ""
     else:
         filename = re.sub(r'[^A-Za-z0-9_\\\-\/\.]+', '', first_line.split(' ')[-1].strip())[-100:]
-    if filename.endswith(file_extension):
-        filename = filename[:-len(file_extension)-1]
-
+        if filename.endswith(file_extension):
+            filename = filename[:-len(file_extension)-1]
     if filename.split("/")[-1] in error_pyfilenames:
         filename=TEMP_FOLDER+md5(save_code.encode('utf-8')).hexdigest()[:8]
     # print(first_line,filename)

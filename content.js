@@ -51,7 +51,7 @@ function detectCodeLanguage(preElement) {
 
   const parentDiv = preElement.closest("div");
   if (parentDiv) {
-    console.log(parentDiv);
+    // console.log(parentDiv);
     const langDiv = parentDiv.querySelector(
       ".code-lang, .language, .top .language ",
     );
@@ -64,7 +64,7 @@ function detectCodeLanguage(preElement) {
   const parentParentDiv = parentDiv ? parentDiv.parentElement : null;
 
   if (parentParentDiv) {
-    console.log(parentParentDiv);
+    // console.log(parentParentDiv);
     const langDiv = parentParentDiv.querySelector(
       "span.tongyi-design-highlighter-lang",
     );
@@ -85,7 +85,7 @@ function detectCodeLanguage(preElement) {
     lines,
   );
 
-  console.log(isPython, isHTML, isSh);
+  // console.log(isPython, isHTML, isSh);
   if (isPython) {
     return "python";
   } else if (isHTML) {
@@ -186,7 +186,7 @@ function createEditModal(codeContent, saveCallback) {
 
 // Function to add the Run, Save, and Edit buttons to code blocks
 function addRenderButtonToCode(codeElement, filenameElement = null) {
-  console.log("addRenderButtonToCode", codeElement);
+  // console.log("addRenderButtonToCode", codeElement);
   let language = null;
   let containerDiv = null;
 
@@ -195,12 +195,12 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
     containerDiv = codeElement.closest("div");
   } else {
     containerDiv = codeElement.closest("pre");
-    console.log(containerDiv);
+    // console.log(containerDiv);
     if (!containerDiv || containerDiv.querySelector(".custom-render-button")) {
       return;
     }
     language = detectCodeLanguage(containerDiv);
-    console.log(language);
+    // console.log(language);
   }
 
   const buttonContainer = document.createElement("div");
@@ -213,6 +213,7 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
     "space-x-2",
     "items-center",
   );
+
   if (
     ["css", "csv", "txt", "md", "yaml", "json", "ini", "xml"].includes(language)
   ) {
@@ -273,6 +274,13 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
     buttonContainer.appendChild(editButton);
 
     containerDiv.style.position = "relative";
+    // if (containerDiv.querySelectorAll("span.line-numbers-rows").length > 0) {
+    //   console.log("line-numbers-rows");
+    //   console.log(containerDiv);
+
+    //   containerDiv.parentElement.appendChild(buttonContainer);
+    // } else {
+    // }
     containerDiv.appendChild(buttonContainer);
 
     runButton.addEventListener("click", () => {
@@ -298,7 +306,7 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
 function sendCodeToServer(codeContent, runParam, containerDiv, language) {
   chrome.storage.sync.get(["serverAddress", "token", "isLocal"], (data) => {
     const serverAddress = data.serverAddress || "http://localhost:8000/runcode";
-    const isLocal = data.isLocal || false;
+    const isLocal = data.isLocal || true;
     const token = data.token || "";
     let resultDiv = containerDiv.querySelector(".custom-result-div");
     if (resultDiv) {
@@ -373,7 +381,7 @@ function sendCodeToServer(codeContent, runParam, containerDiv, language) {
 function extractLanguageAndCode() {
   const codeElements = document.querySelectorAll("pre code");
   console.log(codeElements);
-
+  if (codeElements.length == 0) return;
   codeElements.forEach((codeElement) => {
     divcode = codeElement.querySelector("div.code-wrapper");
     if (divcode) {
@@ -399,23 +407,29 @@ function extractLanguageAndCode() {
 
 // Add mutation observer to detect dynamically added code blocks
 const observer = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    if (mutation.type === "childList") {
-      mutation.addedNodes.forEach((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          const codeElements = node.querySelectorAll("pre code");
-          if (codeElements.length > 0) {
-            setTimeout(() => {
-              extractLanguageAndCode();
-            }, 1000);
-          }
-        }
-      });
-    }
-  });
+  setTimeout(() => {
+    extractLanguageAndCode();
+  }, 2000);
+  // mutations.forEach((mutation) => {
+  //   if (mutation.type === "childList") {
+  //     mutation.addedNodes.forEach((node) => {
+  //       if (node.nodeType === Node.ELEMENT_NODE) {
+  //         if (node && node.textContent.trim() === "") {
+  //         } else {
+  //           const codeElements = node.querySelectorAll("pre code");
+  //           if (codeElements.length > 0) {
+  //             setTimeout(() => {
+  //               extractLanguageAndCode();
+  //             }, 2000);
+  //           }
+  //         }
+  //       }
+  //     });
+  //   }
+  // });
 });
 
 const config = { childList: true, subtree: true };
 observer.observe(document.body, config);
 
-window.addEventListener("load", extractLanguageAndCode);
+// window.addEventListener("load", extractLanguageAndCode);
