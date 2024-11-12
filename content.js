@@ -428,8 +428,28 @@ const observer = new MutationObserver((mutations) => {
   //   }
   // });
 });
+function addButtonToTextarea(textarea) {
+  // 创建按钮
+  const button = document.createElement("button");
+  button.innerText = "⚙️"; // 使用特殊符号
+  button.style.position = "absolute";
+  button.style.left = "-20px";
+  button.style.bottom = "-20px";
+  button.style.backgroundColor = "grey"; // 绿色背景
+  button.style.color = "white";
+  button.style.border = "none";
+
+  // 设置按钮点击事件
+  button.addEventListener("click", extractLanguageAndCode);
+
+  // 添加按钮到 textarea 的父元素中
+  textarea.style.position = "relative"; // 设置 textarea 父元素的相对定位
+  textarea.parentElement.appendChild(button);
+}
 
 const config = { childList: true, subtree: true };
 observer.observe(document.body, config);
-
+document.querySelectorAll("textarea").forEach((textarea) => {
+  addButtonToTextarea(textarea);
+});
 // window.addEventListener("load", extractLanguageAndCode);
