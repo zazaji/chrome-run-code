@@ -410,24 +410,8 @@ const observer = new MutationObserver((mutations) => {
   setTimeout(() => {
     extractLanguageAndCode();
   }, 2000);
-  // mutations.forEach((mutation) => {
-  //   if (mutation.type === "childList") {
-  //     mutation.addedNodes.forEach((node) => {
-  //       if (node.nodeType === Node.ELEMENT_NODE) {
-  //         if (node && node.textContent.trim() === "") {
-  //         } else {
-  //           const codeElements = node.querySelectorAll("pre code");
-  //           if (codeElements.length > 0) {
-  //             setTimeout(() => {
-  //               extractLanguageAndCode();
-  //             }, 2000);
-  //           }
-  //         }
-  //       }
-  //     });
-  //   }
-  // });
 });
+
 function addButtonToTextarea(textarea) {
   // 创建按钮
   const button = document.createElement("button");
@@ -435,8 +419,7 @@ function addButtonToTextarea(textarea) {
   button.style.position = "absolute";
   button.style.left = "-20px";
   button.style.bottom = "-20px";
-  button.style.backgroundColor = "grey"; // 绿色背景
-  button.style.color = "white";
+  button.style.color = "grey";
   button.style.border = "none";
 
   // 设置按钮点击事件
