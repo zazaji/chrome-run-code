@@ -56,7 +56,8 @@ A Chrome extension that allows for the direct execution and editing of code with
 
 6. If you need GPT to write code that can be saved to the corresponding file name, you should add comments and file names at the first line of the code, or you can have GPT implement it according to instructions. The format can refer to:
 
-```
+```python
+
 # src/test.py
 print("hello world")
 ```
