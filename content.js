@@ -79,7 +79,7 @@ function detectCodeLanguage(preElement) {
   const lines = codeText.split("\n").slice(0, 10).join("\n");
 
   // 正则表达式匹配
-  const isPython = /\bdef\b|\bimport\b/.test(lines);
+  const isPython = /\bdef\b|\nimport\b|\bprint\(\b/.test(lines);
   const isHTML = /<html|<body|<iframe/.test(lines);
   const isSh = /\bcd\b|\bgit\b|\bpython\b|\bwget\b|\bmkdir\b|\bls\b/.test(
     lines,
@@ -186,7 +186,6 @@ function createEditModal(codeContent, saveCallback) {
 
 // Function to add the Run, Save, and Edit buttons to code blocks
 function addRenderButtonToCode(codeElement, filenameElement = null) {
-  // console.log("addRenderButtonToCode", codeElement);
   let language = null;
   let containerDiv = null;
 
@@ -195,12 +194,10 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
     containerDiv = codeElement.closest("div");
   } else {
     containerDiv = codeElement.closest("pre");
-    // console.log(containerDiv);
     if (!containerDiv || containerDiv.querySelector(".custom-render-button")) {
       return;
     }
     language = detectCodeLanguage(containerDiv);
-    // console.log(language);
   }
 
   const buttonContainer = document.createElement("div");
@@ -251,8 +248,13 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
       "js",
       "javascript",
       "html",
+      "md",
+      "markdown",
+      "vue",
+      "gitignore",
       "bash",
       "sh",
+      "shell",
       "php",
       "java",
     ].includes(language)
@@ -274,16 +276,11 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
     buttonContainer.appendChild(editButton);
 
     containerDiv.style.position = "relative";
-    // if (containerDiv.querySelectorAll("span.line-numbers-rows").length > 0) {
-    //   console.log("line-numbers-rows");
-    //   console.log(containerDiv);
 
-    //   containerDiv.parentElement.appendChild(buttonContainer);
-    // } else {
-    // }
     containerDiv.appendChild(buttonContainer);
 
     runButton.addEventListener("click", () => {
+      // console.log("run", codeElement);
       const codeContent = extractCodeContent(codeElement);
       sendCodeToServer(codeContent, 1, containerDiv, language);
     });
@@ -379,25 +376,40 @@ function sendCodeToServer(codeContent, runParam, containerDiv, language) {
 }
 
 function extractLanguageAndCode() {
+  const divcodeElements = document.querySelectorAll("div.highlight pre");
+  if (divcodeElements.length > 0) {
+    divcodeElements.forEach((codeElement) => {
+      let lang = "lang. ";
+      codeElement.parentElement.classList.add("hljs");
+      const classList = codeElement.parentElement.classList;
+      for (let className of classList) {
+        if (className.startsWith("highlight-source-")) {
+          lang = className.replace("highlight-source-", "lang.");
+        }
+      }
+      addRenderButtonToCode(codeElement.parentElement, lang);
+    });
+  }
+
   const codeElements = document.querySelectorAll("pre code");
-  console.log(codeElements);
-  if (codeElements.length == 0) return;
-  codeElements.forEach((codeElement) => {
-    divcode = codeElement.querySelector("div.code-wrapper");
-    if (divcode) {
-      divcode.classList.add("hljs");
-      addRenderButtonToCode(divcode);
-    } else {
-      addRenderButtonToCode(codeElement);
-    }
-  });
+  // console.log(codeElements);
+  if (codeElements.length > 0) {
+    codeElements.forEach((codeElement) => {
+      divcode = codeElement.querySelector("div.code-wrapper");
+      if (divcode) {
+        divcode.classList.add("hljs");
+        addRenderButtonToCode(divcode);
+      } else {
+        addRenderButtonToCode(codeElement);
+      }
+    });
+  }
 
   // 支持github;
   const textareaElement = document.querySelector(
     'textarea[data-testid="read-only-cursor-text-area"]',
   );
   if (textareaElement) {
-    webClass = "github";
     const filenameElement = document.querySelector(
       '[data-testid="breadcrumbs-filename"] h1',
     ).textContent;
@@ -406,10 +418,30 @@ function extractLanguageAndCode() {
 }
 
 // Add mutation observer to detect dynamically added code blocks
+// const observer = new MutationObserver((mutations) => {
+//   setTimeout(() => {
+//     extractLanguageAndCode();
+//   }, 2000);
+// });
+//
+//
+let isExtracting = false; // 标志变量，防止多次调用 extractLanguageAndCode
+
 const observer = new MutationObserver((mutations) => {
-  setTimeout(() => {
-    extractLanguageAndCode();
-  }, 2000);
+  mutations.forEach((mutation) => {
+    if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+      // 检查是否有新节点被添加
+      if (!isExtracting) {
+        isExtracting = true;
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            extractLanguageAndCode();
+          }, 2000);
+          isExtracting = false;
+        });
+      }
+    }
+  });
 });
 
 function addButtonToTextarea(textarea) {
@@ -421,6 +453,7 @@ function addButtonToTextarea(textarea) {
   button.style.bottom = "-20px";
   button.style.color = "grey";
   button.style.border = "none";
+  button.style.zIndex = "999";
 
   // 设置按钮点击事件
   button.addEventListener("click", extractLanguageAndCode);
