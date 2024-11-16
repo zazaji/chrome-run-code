@@ -26,7 +26,7 @@ if not(os.path.exists(os.path.join(SAVE_PATH,TEMP_FOLDER))):
 app.mount("/static", StaticFiles(directory=SAVE_PATH), name="static")
 
 
-languages={"python":"py","css":"css","javascript":"js","html":"html","markdown":"md","json":"json","yaml":"yml","text":"txt","bash":"sh","sh":"sh","bat":"cmd","cmd":"cmd","powershell":"cmd","sql":"sql","c":"c","cpp":"cpp","java":"java","kotlin":"kt","objective-c":"m","swift":"swift","typescript":"ts"}
+languages={"vue":"vue","python":"py","py":"py","css":"css","javascript":"js","js":"js","html":"html","markdown":"md","json":"json","yaml":"yml","text":"txt","bash":"sh","sh":"sh","shell":"sh","bat":"cmd","cmd":"cmd","powershell":"cmd","sql":"sql","c":"c","cpp":"cpp","java":"java","kotlin":"kt","objective-c":"m","swift":"swift","typescript":"ts"}
 error_pyfilenames=['','pygame','os', 're', 'sys', 'time', 'subprocess', 'platform', 'os', 're', 'time', 'subprocess', 'platform', 'numpy', 'pandas', 'matplotlib', 'PIL', 'cv2', 'torch', 'tensorflow', 'keras', 'sklearn', 'scipy', 'seaborn', 'nltk', 'jieba', 'wordcloud', 'plotly', 'base64', 'io',
         'json', 'yaml', 'csv', 'random', 'math', 'datetime', 'shutil', 'glob', 'argparse', 'logging', 'functools', 'itertools', 'collections', 'operator', 'statistics', 'string', 're', 'urllib', 'http', 'socket', 'ssl', 'hashlib']
 # print(languages.get("html".lower(), 'py'))
@@ -82,7 +82,6 @@ def save_file_with_directory(path, content):
 
 def get_filename_from_code(save_code,file_extension):
     first_line = save_code.splitlines()[0]
-
     if first_line.startswith("import ") or first_line.startswith("from "):
         filename = TEMP_FOLDER + md5(save_code.encode('utf-8')).hexdigest()[:8]
     elif first_line.startswith("<!DOCTYPE") and file_extension=="html":
@@ -90,12 +89,15 @@ def get_filename_from_code(save_code,file_extension):
     # elif first_line.startswith("/*") and file_extension=="css":
     #     filename = ""
     else:
-        filename = re.sub(r'[^A-Za-z0-9_\\\-\/\.]+', '', first_line.split(' ')[-1].strip())[-100:]
+        if file_extension in ['html','vue']:first_line=first_line.replace("<!--","").replace("-->","")
+        print('sssss',file_extension,first_line.strip())
+        filename = re.sub(r'[^A-Za-z0-9_\\\-\/\.]+', '', first_line.strip().split(' ')[-1])[-100:]
         if filename.endswith(file_extension):
             filename = filename[:-len(file_extension)-1]
-    if filename.split("/")[-1] in error_pyfilenames:
+
+    if filename.split("/")[-1]=="" or (filename.split("/")[-1] in error_pyfilenames and file_extension!="py"):
         filename=TEMP_FOLDER+md5(save_code.encode('utf-8')).hexdigest()[:8]
-    # print(first_line,filename)
+    print(first_line,filename)
     return filename
 
 def replace_show_plot(code):
@@ -139,7 +141,7 @@ async def run_code(code_request: CodeRequest):
 
     if 1:
     # try:
-        # 提取第一行作为文件名
+        print(code_request.language)
         file_extension = languages.get(code_request.language.lower(), 'py')
         if file_extension=="sh":
             file_extension=get_file_extension()
@@ -148,6 +150,7 @@ async def run_code(code_request: CodeRequest):
         filename=get_filename_from_code(save_code,file_extension)
 
         source_filename = os.path.join(SAVE_PATH,f"{filename}.{file_extension}")
+        print(source_filename)
         exec_filename = os.path.join(SAVE_PATH,f"{filename}.out")
 
         if code_request.isLocal==False and code_request.language == "python" and "matplotlib.pyplot" in save_code:
@@ -230,40 +233,3 @@ async def run_code(code_request: CodeRequest):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-
-
-
-
-
-
-
-# def add_global_images_count(code):
-#     # 匹配包含 plt.show() 的函数
-#     def add_global_to_func(match):
-#         func_body = match.group(0)
-#         # 如果函数体中有 plt.show()，则在函数第一行插入 global images_count
-#         if 'plt.show()' in func_body:
-#             func_body_lines = func_body.split('\n')
-#             func_body_lines.insert(1, '    global images_count')  # 在第一行之后插入 global 声明
-#             return '\n'.join(func_body_lines)
-#         return func_body
-
-#     # 找出所有定义的函数，并处理函数体
-#     modified_code = re.sub(r'(def [\w_]+\([\w_, ]*\):\n(?:    .*\n?)*)', add_global_to_func, code)
-
-#     # 替换 plt.show() 为 plt.savefig() 逻辑
-#     code_with_saves = re.sub(
-#         r'plt.show\(\)',
-#         lambda match: (
-#             'plt.savefig(f"temp_{images_count}.png"); '
-#             'plt.clf(); '
-#             'print(f"[[[temp_{images_count}.png]]]"); '
-#             'images_count += 1'
-#         ),
-#         modified_code
-#     )
-
-#     save_code = "images_count = 0\noutputs = []\n" + code_with_saves
-#     return save_code
