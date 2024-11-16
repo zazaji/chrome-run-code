@@ -254,6 +254,7 @@ function addRenderButtonToCode(codeElement, filenameElement = null) {
       "gitignore",
       "bash",
       "sh",
+      "cmd",
       "shell",
       "php",
       "java",
