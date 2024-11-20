@@ -18,6 +18,8 @@
 
 ## 安装步骤
 
+![](images/install.gif)
+
 1. 克隆此仓库或者下载本项目：
    ```bash
    git clone https://github.com/zazaji/chrome-run-code.git

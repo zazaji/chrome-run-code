@@ -20,6 +20,8 @@ A Chrome extension that allows for the direct execution and editing of code with
 
 ## Installation Steps
 
+![](images/install.gif)
+
 1. Clone this repository:
 
    ```bash
