@@ -78,7 +78,7 @@ print("hello world")
 
 ![Screenshot](images/edit.jpg)
 
-![Screenshot](images/mobile.gif)
+![Screenshot](images/mobile.gif =661x1175)
 
 ## Configuration Options
 

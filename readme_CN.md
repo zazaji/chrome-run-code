@@ -60,7 +60,7 @@ print("hello world")
 
 ![截图](images/edit.jpg)
 
-![截图](images/mobile.gif)
+![截图](images/mobile.gif =661x1175)
 
 ## 配置选项
 
