@@ -78,6 +78,8 @@ print("hello world")
 
 ![Screenshot](images/edit.jpg)
 
+![Screenshot](images/mobile.gif)
+
 ## Configuration Options
 
 - The server address can be configured using Chrome's storage API, with the default being `http://localhost:8000/runcode`. It needs to be consistent with the backend service's token.

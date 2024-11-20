@@ -60,6 +60,8 @@ print("hello world")
 
 ![截图](images/edit.jpg)
 
+![截图](images/mobile.gif)
+
 ## 配置选项
 
 - 服务器地址可以使用 Chrome 的存储 API 进行配置，默认为 `http://localhost:8000/runcode`。需要与后端服务的token一致。
